@@ -4,9 +4,6 @@ import React, { useState, useEffect } from "react";
 function App() {
   const [entities, setEntities] = useState([]);
   const [selectedEntity, setSelectedEntity] = useState(null);
-  const [review, setReview] = useState({ rating: "", comment: "" });
-  const [reviews, setReviews] = useState([]);
-  const [editReview, setEditReview] = useState(null);
   const [newEntity, setNewEntity] = useState({ entity_type: "", entity_price: "", entity_seller: "", entity_name: "" });
 
   useEffect(() => {
@@ -18,64 +15,14 @@ function App() {
 
   const handleSelectEntity = (entity) => {
     setSelectedEntity(entity);
-    fetch(`http://127.0.0.1:8000/v1/entities/${entity.id}/reviews`)
-      .then((res) => res.json())
-      .then((data) => setReviews(data))
-      .catch(() => setReviews([]));
-  };
 
-  const handleReviewSubmit = (e) => {
-    e.preventDefault();
-    if (!selectedEntity) return alert("Select an entity first!");
-
-    fetch("http://127.0.0.1:8000/v1/reviews", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        entity_id: selectedEntity.id,
-        rating: parseFloat(review.rating),
-        comment: review.comment,
-      }),
-    })
-      .then((res) => res.json())
-      .then(() => {
-        alert("Review submitted!");
-        setReview({ rating: "", comment: "" });
-        handleSelectEntity(selectedEntity); // Refresh reviews
-      })
-      .catch((err) => console.error("Error submitting review:", err));
-  };
-
-  const handleReviewEdit = (e) => {
-    e.preventDefault();
-    if (!editReview) return;
-
-    fetch(`http://127.0.0.1:8000/v1/entities/${selectedEntity.id}/reviews/${editReview.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        rating: parseFloat(editReview.rating),
-        comment: editReview.comment,
-      }),
-    })
-      .then((res) => res.json())
-      .then(() => {
-        alert("Review updated!");
-        setEditReview(null);
-        handleSelectEntity(selectedEntity); // Refresh reviews
-      })
-      .catch((err) => console.error("Error updating review:", err));
-  };
-
-  const handleReviewDelete = (reviewId) => {
-    fetch(`http://127.0.0.1:8000/v1/entities/${selectedEntity.id}/reviews/${reviewId}`, {
-      method: "DELETE",
-    })
-      .then(() => {
-        alert("Review deleted!");
-        handleSelectEntity(selectedEntity); // Refresh reviews
-      })
-      .catch((err) => console.error("Error deleting review:", err));
+    // Dynamically load the widget for the selected entity
+    const containerId = "review-widget-container";
+    if (window.loadReviews) {
+      window.loadReviews(entity.id, containerId);
+    } else {
+      console.error("Review widget script not loaded.");
+    }
   };
 
   const handleEntitySubmit = (e) => {
@@ -104,7 +51,6 @@ function App() {
         setEntities(entities.filter((entity) => entity.id !== entityId));
         if (selectedEntity && selectedEntity.id === entityId) {
           setSelectedEntity(null);
-          setReviews([]);
         }
       })
       .catch((err) => console.error("Error deleting entity:", err));
@@ -186,67 +132,8 @@ function App() {
       {selectedEntity && (
         <div>
           <h2>Reviews for {selectedEntity.entity_type}</h2>
-          <ul>
-            {reviews.length > 0 ? (
-              reviews.map((rev) => (
-                <li key={rev.id}>
-                  <strong>{rev.rating}/5</strong> - {rev.comment}
-                  <button onClick={() => setEditReview(rev)}>Edit</button>
-                  <button onClick={() => handleReviewDelete(rev.id)}>Delete</button>
-                </li>
-              ))
-            ) : (
-              <p>No reviews yet.</p>
-            )}
-          </ul>
-
-          <h2>Submit a Review</h2>
-          <form onSubmit={handleReviewSubmit}>
-            <label>Rating (1-5): </label>
-            <input
-              type="number"
-              min="1"
-              max="5"
-              value={review.rating}
-              onChange={(e) => setReview({ ...review, rating: e.target.value })}
-              required
-            />
-            <br />
-            <label>Comment: </label>
-            <input
-              type="text"
-              value={review.comment}
-              onChange={(e) => setReview({ ...review, comment: e.target.value })}
-            />
-            <br />
-            <button type="submit">Submit Review</button>
-          </form>
-
-          {editReview && (
-            <div>
-              <h2>Edit Review</h2>
-              <form onSubmit={handleReviewEdit}>
-                <label>Rating (1-5): </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={editReview.rating}
-                  onChange={(e) => setEditReview({ ...editReview, rating: e.target.value })}
-                  required
-                />
-                <br />
-                <label>Comment: </label>
-                <input
-                  type="text"
-                  value={editReview.comment}
-                  onChange={(e) => setEditReview({ ...editReview, comment: e.target.value })}
-                />
-                <br />
-                <button type="submit">Update Review</button>
-              </form>
-            </div>
-          )}
+          {/* widget container will appear here */}
+          <div id="review-widget-container"></div>
         </div>
       )}
     </div>
