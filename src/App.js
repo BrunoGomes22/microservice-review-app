@@ -7,7 +7,7 @@ function App() {
   const [newEntity, setNewEntity] = useState({ entity_type: "", entity_price: "", entity_seller: "", entity_name: "" });
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/v1/entities")
+    fetch("http://127.0.0.1:8001/v1/entities")
       .then((res) => res.json())
       .then((data) => setEntities(data))
       .catch((err) => console.error("Error fetching entities:", err));
@@ -28,7 +28,7 @@ function App() {
   const handleEntitySubmit = (e) => {
     e.preventDefault();
 
-    fetch("http://127.0.0.1:8000/v1/entities", {
+    fetch("http://127.0.0.1:8001/v1/entities", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newEntity),
@@ -43,7 +43,7 @@ function App() {
   };
 
   const handleEntityDelete = (entityId) => {
-    fetch(`http://127.0.0.1:8000/v1/entities/${entityId}`, {
+    fetch(`http://127.0.0.1:8001/v1/entities/${entityId}`, {
       method: "DELETE",
     })
       .then(() => {
